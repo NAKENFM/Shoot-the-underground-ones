@@ -1,0 +1,106 @@
+-- Perfect Flip Sink with Restore Teleport | เท้าแนบพื้นแบบกลับที่เดิม
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+
+-- UI
+local gui = Instance.new("ScreenGui", lp:WaitForChild("PlayerGui"))
+gui.Name = "SinkFlipUI"
+gui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 180, 0, 60)
+frame.Position = UDim2.new(0.05, 0, 0.1, 0)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.Active = true
+frame.Draggable = true
+
+local button = Instance.new("TextButton", frame)
+button.Size = UDim2.new(1, 0, 1, 0)
+button.Text = "กลับหัวจมดิน (OFF)"
+button.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+button.Font = Enum.Font.GothamBold
+button.TextColor3 = Color3.new(1, 1, 1)
+button.TextScaled = true
+Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
+
+-- Logic
+local active = false
+local savedPosition = nil
+local savedOrientation = nil
+
+local function getGroundY(pos, ignore)
+	local ray = RaycastParams.new()
+	ray.FilterType = Enum.RaycastFilterType.Blacklist
+	ray.FilterDescendantsInstances = {ignore}
+	local result = workspace:Raycast(pos, Vector3.new(0, -50, 0), ray)
+	return result and result.Position.Y or nil
+end
+
+local function sinkFlip()
+	local char = lp.Character or lp.CharacterAdded:Wait()
+	local hrp = char:WaitForChild("HumanoidRootPart")
+	local hum = char:WaitForChild("Humanoid")
+
+	-- 🧠 Save position before flipping
+	savedPosition = hrp.Position
+	savedOrientation = hrp.Orientation
+
+	-- Freeze & flip
+	for _, p in pairs(char:GetDescendants()) do
+		if p:IsA("BasePart") then
+			p.Anchored = false
+			p.CanCollide = false
+			p.AssemblyLinearVelocity = Vector3.zero
+			p.AssemblyAngularVelocity = Vector3.zero
+		end
+	end
+
+	hum:ChangeState(Enum.HumanoidStateType.Physics)
+	hum.PlatformStand = true
+	task.wait(0.05)
+
+	-- กลับหัว + จม
+	local FLIP = CFrame.Angles(math.rad(180), 0, 0)
+	local OFFSET = Vector3.new(0, -7.9, 0)
+	hrp.Anchored = true
+	hrp.CFrame = hrp.CFrame * FLIP + OFFSET
+end
+
+local function restoreTeleport()
+	local char = lp.Character
+	if not char then return end
+
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	local hum = char:FindFirstChild("Humanoid")
+	local leftFoot = char:FindFirstChild("LeftFoot") or char:FindFirstChild("Left Leg")
+
+	if not hrp or not hum or not leftFoot or not savedPosition then return end
+
+	hum.PlatformStand = false
+	hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+
+	for _, p in pairs(char:GetDescendants()) do
+		if p:IsA("BasePart") then
+			p.Anchored = false
+			p.CanCollide = true
+		end
+	end
+
+	-- ✅ Teleport กลับตำแหน่งเดิม
+	local footHeight = (leftFoot.Position.Y - hrp.Position.Y)
+	local checkY = getGroundY(savedPosition, char)
+	local finalY = checkY and (checkY - footHeight + 0.1) or savedPosition.Y
+
+	hrp.CFrame = CFrame.new(Vector3.new(savedPosition.X, finalY, savedPosition.Z)) * CFrame.Angles(0, math.rad(savedOrientation.Y), 0)
+end
+
+button.MouseButton1Click:Connect(function()
+	active = not active
+	if active then
+		button.Text = "กลับหัวจมดิน (ON)"
+		sinkFlip()
+	else
+		button.Text = "กลับหัวจมดิน (OFF)"
+		restoreTeleport()
+	end
+end)
