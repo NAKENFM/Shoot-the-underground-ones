@@ -16,7 +16,7 @@ frame.Draggable = true
 
 local button = Instance.new("TextButton", frame)
 button.Size = UDim2.new(1, 0, 1, 0)
-button.Text = "กลับหัวจมดิน (OFF)"
+button.Text = "ฟังก์ชันยิงตัวตุ่น (OFF)"
 button.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 button.Font = Enum.Font.GothamBold
 button.TextColor3 = Color3.new(1, 1, 1)
@@ -97,10 +97,10 @@ end
 button.MouseButton1Click:Connect(function()
 	active = not active
 	if active then
-		button.Text = "กลับหัวจมดิน (ON)"
+		button.Text = "ฟังก์ชั่นยิงตัวตุ่น (ON)"
 		sinkFlip()
 	else
-		button.Text = "กลับหัวจมดิน (OFF)"
+		button.Text = "ฟังก์ชันยิงตัวตุ่น (OFF)"
 		restoreTeleport()
 	end
-en
+end)
