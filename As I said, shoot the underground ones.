@@ -103,4 +103,4 @@ button.MouseButton1Click:Connect(function()
 		button.Text = "กลับหัวจมดิน (OFF)"
 		restoreTeleport()
 	end
-end)
+en
